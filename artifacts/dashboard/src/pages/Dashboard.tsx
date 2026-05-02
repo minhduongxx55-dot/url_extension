@@ -18,7 +18,7 @@ import {
   getListEntriesQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Entry } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { Entry } from "@workspace/api-client-react";
 import { EntryForm } from "@/components/EntryForm";
 import { DeleteDialog } from "@/components/DeleteDialog";
 import { toast } from "sonner";
