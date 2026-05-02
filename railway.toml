@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm install -g pnpm@10 && pnpm install --no-frozen-lockfile && pnpm run build"
+buildCommand = "npx --yes pnpm@10 install --no-frozen-lockfile && npx --yes pnpm@10 run build"
 
 [deploy]
 startCommand = "node --enable-source-maps artifacts/api-server/dist/index.mjs"
