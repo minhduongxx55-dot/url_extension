@@ -1,2 +1,16 @@
 [phases.setup]
 nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = [
+  "npm install -g corepack@latest",
+  "corepack enable",
+  "corepack prepare pnpm@10 --activate",
+  "pnpm install --no-frozen-lockfile"
+]
+
+[phases.build]
+cmds = ["pnpm run build"]
+
+[start]
+cmd = "node --enable-source-maps artifacts/api-server/dist/index.mjs"
