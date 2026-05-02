@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Entry } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { Entry } from "@workspace/api-client-react";
 import { useCreateEntry, useUpdateEntry, getListEntriesQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
