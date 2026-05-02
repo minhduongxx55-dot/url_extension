@@ -1,135 +1,121 @@
 # Deploy URL Storage Server
 
-## Tong quan
+## Tổng quan
 
-Mot service duy nhat: Express API + Dashboard React (phuc vu file tinh).
+Project này chạy dưới dạng **1 service duy nhất**:
 
+```text
+https://your-app.up.railway.app/             -> Dashboard React
+https://your-app.up.railway.app/api/healthz  -> Health check
+https://your-app.up.railway.app/api/entries  -> API dữ liệu URL
 ```
-https://your-app.up.railway.app/           -> Dashboard (React SPA)
-https://your-app.up.railway.app/api/       -> API REST
-https://your-app.up.railway.app/api/health -> Health check
-```
+
+Server đã được sửa để khi khởi động sẽ tự tạo bảng `entries` nếu chưa có. Vì vậy sau khi thêm PostgreSQL trên Railway, bạn không bắt buộc phải chạy `pnpm db:push` nữa.
 
 ---
 
-## Cach 1: Railway (khuyen nghi — $5 credit/thang, co PostgreSQL)
+## Deploy trên Railway
 
-### Buoc 1 — Dua code len GitHub
+### 1. Đẩy source lên GitHub
 
-1. Tao tai khoan GitHub tai https://github.com (neu chua co)
-2. Tao repo moi: nhan **New repository** -> dat ten `url-storage-server` -> **Create repository**
-3. Giai nen file zip nay, mo Terminal/CMD trong thu muc vua giai nen
-4. Chay lan luot cac lenh sau:
-
-```
+```bash
 git init
 git add .
-git commit -m "initial"
+git commit -m "initial deploy"
 git branch -M main
 git remote add origin https://github.com/USERNAME/url-storage-server.git
 git push -u origin main
 ```
 
-> Thay `USERNAME` bang ten tai khoan GitHub cua ban.
+Thay `USERNAME` bằng tài khoản GitHub của bạn.
 
----
+### 2. Tạo Railway project
 
-### Buoc 2 — Tao project tren Railway
-
-1. Vao https://railway.app -> **Login with GitHub**
-2. Nhan **New Project** -> **Deploy from GitHub repo**
-3. Chon repo `url-storage-server` vua tao
-4. Railway tu detect `railway.toml` va bat dau build (3-5 phut)
-
----
-
-### Buoc 3 — Them PostgreSQL
-
-1. Trong project -> nhan **+ New** -> **Database** -> **Add PostgreSQL**
-2. Database tu tao va gan bien `DATABASE_URL` vao service
-
----
-
-### Buoc 4 — Them bien moi truong
-
-Vao service -> tab **Variables** -> nhan **Add Variable**:
-
-| Key | Value |
-|-----|-------|
-| `NODE_ENV` | `production` |
-
-> `DATABASE_URL` va `PORT` Railway tu set, khong can them.
-
----
-
-### Buoc 5 — Lay URL cong khai
-
-- Vao tab **Settings** -> **Networking** -> nhan **Generate Domain**
-- Ban nhan duoc URL dang: `https://url-storage-server-xxxx.up.railway.app`
-
----
-
-### Buoc 6 — Cap nhat Extension
-
-Mo file `background.js` cua extension, sua dong dau:
-
-```javascript
-const STORAGE_SERVER = "https://url-storage-server-xxxx.up.railway.app";
+```text
+Railway -> New Project -> Deploy from GitHub repo -> chọn repo url-storage-server
 ```
 
-Sau do vao `chrome://extensions` -> nhan **Reload** extension.
+Railway sẽ dùng `railway.toml`:
 
----
-
-## Cach 2: Render (hoan toan mien phi, nhung ngu sau 15 phut)
-
-1. Vao https://render.com -> **New Web Service** -> chon GitHub repo
-2. Cai dat:
-   - **Build Command**: `npm install -g pnpm@10 && pnpm install --no-frozen-lockfile && pnpm run build`
-   - **Start Command**: `node --enable-source-maps artifacts/api-server/dist/index.mjs`
-   - **Instance type**: **Free**
-3. Them **New PostgreSQL** (mien phi) -> copy **Internal Database URL**
-4. Trong Web Service -> **Environment** -> them:
-   - `DATABASE_URL` = (URL vua copy)
-   - `NODE_ENV` = `production`
-
----
-
-## Kiem tra sau deploy
-
-| URL | Ket qua mong doi |
-|-----|-----------------|
-| `https://your-domain/` | Dashboard hien ra |
-| `https://your-domain/api/health` | `{"status":"ok"}` |
-| `https://your-domain/api/entries` | `[]` hoac danh sach entries |
-
----
-
-## Troubleshooting
-
-| Loi | Cach xu ly |
-|-----|-----------|
-| `DATABASE_URL must be set` | Chua them PostgreSQL add-on |
-| `Cannot find module` | Build chua hoan thanh, doi them |
-| Dashboard trang | Kiem tra `NODE_ENV=production` |
-| Extension loi CORS | Kiem tra lai URL trong `background.js` |
-| Build fail tren Railway | Xem log Build, thuong do pnpm version |
-
----
-
-## Cau truc thu muc
-
+```bash
+npm install -g pnpm@10 && pnpm install --no-frozen-lockfile && pnpm run build
 ```
-url-storage-server/
-├── artifacts/
-│   ├── api-server/         Express.js API
-│   └── dashboard/          React + Vite SPA
-├── lib/
-│   ├── db/                 Drizzle ORM + PostgreSQL schema
-│   ├── api-zod/            Zod validation schemas
-│   └── api-client-react/   React Query hooks
-├── railway.toml            Railway config
-├── nixpacks.toml           Node.js 20 config
-├── pnpm-workspace.yaml     pnpm monorepo config
-└── DEPLOY.md               File nay
+
+Start command:
+
+```bash
+node --enable-source-maps artifacts/api-server/dist/index.mjs
 ```
+
+Health check:
+
+```text
+/api/healthz
+```
+
+### 3. Thêm PostgreSQL
+
+```text
+Project -> + New -> Database -> Add PostgreSQL
+```
+
+Sau đó vào service web -> Variables, kiểm tra có:
+
+```env
+DATABASE_URL=...
+NODE_ENV=production
+```
+
+`PORT` Railway tự cấp, không cần tự thêm.
+
+### 4. Tạo public domain
+
+```text
+Service -> Settings -> Networking -> Generate Domain
+```
+
+Test:
+
+```text
+https://your-app.up.railway.app/api/healthz
+```
+
+Kết quả đúng:
+
+```json
+{"status":"ok"}
+```
+
+Dashboard:
+
+```text
+https://your-app.up.railway.app/
+```
+
+---
+
+## Sửa extension
+
+Trong file `background.js` của extension, đổi `STORAGE_SERVER` thành domain Railway:
+
+```js
+const STORAGE_SERVER = "https://your-app.up.railway.app";
+```
+
+Sau đó vào:
+
+```text
+chrome://extensions -> Reload extension
+```
+
+---
+
+## Lỗi thường gặp
+
+| Lỗi | Nguyên nhân | Cách sửa |
+|---|---|---|
+| Deploy unhealthy | `healthcheckPath` sai | Phải là `/api/healthz` |
+| `DATABASE_URL must be set` | Chưa thêm PostgreSQL hoặc biến chưa gắn vào web service | Add PostgreSQL và kiểm tra Variables |
+| `relation "entries" does not exist` | Database chưa có bảng | Bản này đã auto-create bảng khi start |
+| `Cannot GET /` | API chưa serve dashboard React | Bản này đã serve `artifacts/dashboard/dist/public` |
+| Dashboard trắng / API 404 | Build dashboard không ra đúng thư mục | Kiểm tra Vite `outDir` và build log |
